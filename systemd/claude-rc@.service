@@ -1,0 +1,25 @@
+# Runs `claude rc` in the directory of project %i.
+#
+# The project root defaults to ~/src; override it by setting
+# CLAUDE_RC_ROOT in ~/.config/claude-rc/env, e.g.:
+#   CLAUDE_RC_ROOT=/home/me/work
+#
+# Usage: systemctl --user enable --now claude-rc@<project>.service
+
+[Unit]
+Description=Claude remote control for project %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=CLAUDE_RC_ROOT=%h/src
+EnvironmentFile=-%h/.config/claude-rc/env
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+# WorkingDirectory= can't expand environment variables, so cd in a shell.
+ExecStart=/bin/sh -c 'cd "$CLAUDE_RC_ROOT/%i" && exec claude rc'
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
