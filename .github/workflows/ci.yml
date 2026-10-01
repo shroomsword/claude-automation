@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The units run ~/.local/bin/claude; verification only needs it to exist.
+      - name: Install claude stub
+        run: |
+          mkdir -p ~/.local/bin
+          printf '#!/bin/sh\nexit 0\n' > ~/.local/bin/claude
+          chmod +x ~/.local/bin/claude
+
+      - name: Verify units
+        run: scripts/verify-units.sh
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Start user manager
+        run: |
+          sudo loginctl enable-linger "$USER"
+          runtime_dir="/run/user/$(id -u)"
+          for _ in $(seq 50); do
+            [[ -S "$runtime_dir/bus" ]] && break
+            sleep 0.2
+          done
+          echo "XDG_RUNTIME_DIR=$runtime_dir" >> "$GITHUB_ENV"
+
+      - name: Test template
+        run: scripts/test-template.sh
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build
+        run: echo "No build artifacts; the unit files are installed as-is."
+
+  doc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Check README covers every unit
+        run: scripts/check-readme.sh
+
+  # Aggregate result. This is the only check the ruleset requires.
+  ci:
+    if: always()
+    needs: [lint, test, build, doc]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        env:
+          FAILED: >-
+            ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+            || contains(needs.*.result, 'skipped') }}
+        run: |
+          if [[ "$FAILED" == "true" ]]; then
+            echo "::error::One or more CI jobs did not succeed"
+            exit 1
+          fi
