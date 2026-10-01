@@ -35,3 +35,13 @@ loginctl enable-linger "$USER"                           # keep running without 
 
 Check on a unit with `systemctl --user status claude-rc@delve.service` and
 `journalctl --user -u claude-rc@delve.service`.
+
+## Checks
+
+The CI checks are scripts that also run locally:
+
+```sh
+scripts/verify-units.sh     # systemd-analyze verify (needs ~/.local/bin/claude)
+scripts/test-template.sh    # starts a template instance with a stub claude (needs a user manager)
+scripts/check-readme.sh     # every unit is documented here
+```
