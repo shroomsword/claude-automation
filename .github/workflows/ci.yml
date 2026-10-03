@@ -48,6 +48,9 @@ jobs:
       - name: Test template
         run: scripts/test-template.sh
 
+      - name: Test unit scripts
+        run: scripts/test-unit-scripts.sh
+
   build:
     runs-on: ubuntu-latest
     steps:
