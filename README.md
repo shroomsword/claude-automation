@@ -11,6 +11,7 @@ be started from claude.ai or the Claude mobile app.
 |---|---|
 | `systemd/claude-rc@.service` | `$CLAUDE_RC_ROOT/<instance>`, where `CLAUDE_RC_ROOT` defaults to `~/src` |
 | `systemd/claude-rc@delve.service` | `~/src/delve` |
+| `systemd/claude-rc@wd-ex2-ultra.service` | `~/re/western-digital/mycloud-ex2-ultra` |
 
 All units expect `claude` at `~/.local/bin/claude`, restart 10 seconds after a failure, and start with the user manager.
 
