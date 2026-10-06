@@ -11,8 +11,12 @@ trap 'rm -rf "$tmp"' EXIT
 repo="$tmp/repo"
 mkdir -p "$repo/scripts" "$repo/systemd" "$tmp/bin" "$tmp/home/src/delve" "$tmp/other dir/100%"
 cp scripts/new-unit.sh scripts/remove-unit.sh "$repo/scripts/"
-cp systemd/claude-rc@.service systemd/claude-rc@delve.service README.md "$repo/systemd/"
-mv "$repo/systemd/README.md" "$repo/"
+cp systemd/claude-rc@.service systemd/claude-rc@delve.service "$repo/systemd/"
+# The fixture README lists only the template and delve, so re-adding delve (appended last) restores it exactly.
+grep -v '^| `systemd/claude-rc@' README.md > "$tmp/README.base"
+{ grep -F '| `systemd/claude-rc@.service`' README.md; grep -F '| `systemd/claude-rc@delve.service`' README.md; } > "$tmp/rows"
+awk -v rows="$tmp/rows" '{ print } /^\|---\|---\|$/ { while ((getline l < rows) > 0) print l }' "$tmp/README.base" > "$repo/README.md"
+cp "$repo/README.md" "$tmp/README.expected"
 export HOME="$tmp/home"
 export XDG_CONFIG_HOME="$tmp/config"
 installed="$XDG_CONFIG_HOME/systemd/user"
@@ -91,7 +95,7 @@ if expect new-unit.sh ok delve "$HOME/src/delve"; then
     expect_calls $'--user daemon-reload\n--user enable --now claude-rc@delve.service\nloginctl enable-linger'
     diff -u systemd/claude-rc@delve.service "$repo/systemd/claude-rc@delve.service" || fail "delve unit differs"
     diff -u systemd/claude-rc@delve.service "$installed/claude-rc@delve.service" || fail "installed delve unit differs"
-    diff -u README.md "$repo/README.md" || fail "README.md differs"
+    diff -u "$tmp/README.expected" "$repo/README.md" || fail "README.md differs"
 fi
 
 # A relative directory is made absolute; spaces are kept and % is escaped as %% in the unit but not in the README.

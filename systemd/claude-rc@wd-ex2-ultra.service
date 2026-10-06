@@ -1,0 +1,19 @@
+# Runs `claude rc` in ~/re/western-digital/mycloud-ex2-ultra.
+#
+# Usage: systemctl --user enable --now claude-rc@wd-ex2-ultra.service
+
+[Unit]
+Description=Claude remote control for project wd-ex2-ultra
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/re/western-digital/mycloud-ex2-ultra
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/.local/bin/claude rc
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
