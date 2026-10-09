@@ -30,6 +30,10 @@ install_dir=${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user
 installed=$install_dir/$unit_name
 
 [[ -f "$unit" ]] || die "$unit does not exist"
+# Sessions started without logind (su, sudo, some ssh/cron setups) lack these; the user manager's socket is at a fixed path.
+if [[ -z "${XDG_RUNTIME_DIR-}" && -d "/run/user/$(id -u)" ]]; then
+    export XDG_RUNTIME_DIR=/run/user/$(id -u)
+fi
 systemctl --user show-environment > /dev/null || die "cannot reach the user manager"
 
 if [[ -e "$installed" ]]; then

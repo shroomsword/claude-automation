@@ -47,6 +47,10 @@ row="| \`$unit\` | \`$shown\` |"
 
 [[ ! -e "$unit" ]] || die "$unit already exists"
 [[ ! -e "$install_dir/$unit_name" ]] || die "$install_dir/$unit_name already exists"
+# Sessions started without logind (su, sudo, some ssh/cron setups) lack these; the user manager's socket is at a fixed path.
+if [[ -z "${XDG_RUNTIME_DIR-}" && -d "/run/user/$(id -u)" ]]; then
+    export XDG_RUNTIME_DIR=/run/user/$(id -u)
+fi
 systemctl --user show-environment > /dev/null || die "cannot reach the user manager"
 ! systemctl --user is-active --quiet "$unit_name" || die "$unit_name is already running; stop it first"
 last_row=$(grep -n '^| `systemd/' README.md | tail -n 1 | cut -d: -f1)
