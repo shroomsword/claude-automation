@@ -13,6 +13,7 @@ be started from claude.ai or the Claude mobile app.
 | `systemd/claude-rc@delve.service` | `~/src/delve` |
 | `systemd/claude-rc@wd-ex2-ultra.service` | `~/re/western-digital/mycloud-ex2-ultra` |
 | `systemd/claude-rc@doe.service` | `~/src/doe` |
+| `systemd/claude-rc@shroom-lord.service` | `~/src/shroom-lord` |
 
 All units expect `claude` at `~/.local/bin/claude`, restart 10 seconds after a failure, and start with the user manager.
 
